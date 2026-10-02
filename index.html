@@ -1,4 +1,8 @@
 <!DOCTYPE html>
+from pathlib import Path
+
+# Contenido HTML final consolidado para la plataforma
+html_contenido = """<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -76,7 +80,7 @@
 
         <div class="form-group">
             <label for="nombreCliente">Nombre de la Organización / Clínica:</label>
-            <input type="text" id="nombreCliente" required maxlength="80" pattern="[A-Za-z0-9áéíóúÁÉÍÓÚñÑ\s\.\,\-_]+" title="Solo se permiten letras, números y espacios estándar" placeholder="Ej. Clínica Las Condes">
+            <input type="text" id="nombreCliente" required maxlength="80" pattern="[A-Za-z0-9áéíóúÁÉÍÓÚñÑ\\s\\.\\,\\-_]+" title="Solo se permiten letras, números y espacios estándar" placeholder="Ej. Clínica Las Condes">
         </div>
 
         <h3>Dimensión 1: Eficiencia Operativa (Flujos y Procesos)</h3>
@@ -141,7 +145,7 @@
     renderPreguntas('cohesion', 'preguntasCohesion');
     renderPreguntas('digitalizacion', 'preguntasDigitalizacion');
 
-    // Lógica del simulador para pedir el token al backend
+    // Lógica del simulador para pedir el token al backend de forma limpia
     document.getElementById('btnSimularToken').addEventListener('click', async function() {
         const nombre = document.getElementById('simNombre').value.trim();
         const email = document.getElementById('simEmail').value.trim();
@@ -154,12 +158,11 @@
         }
 
         try {
-            // Llama a tu endpoint de creación de token existente en main.py
             const response = await fetch(`/api/crear-token?cliente=${encodeURIComponent(nombre)}`);
             if (!response.ok) throw new Error("No se pudo generar el token en el servidor.");
             
-           const data = await response.json();
-           const tokenGenerado = data.token || data.codigo || data.access_token || data; // Ajusta según la estructura JSON que devuelva tu API
+            const data = await response.json();
+            const tokenGenerado = (typeof data === 'object') ? (data.token || data.codigo || data.access_token || JSON.stringify(data)) : data;
 
             resDiv.style.display = 'block';
             resDiv.innerHTML = `<b>¡Simulación Exitosa!</b><br>Pago registrado vía ${metodo}.<br>Tu Token generado es: <strong style="font-size: 15px; color: #166534;">${tokenGenerado}</strong><br><button type="button" style="margin-top: 8px; padding: 6px 12px; font-size: 13px; width: auto;" onclick="document.getElementById('tokenAcceso').value='${tokenGenerado}'; document.getElementById('nombreCliente').value='${nombre}';">Usar este Token en el Formulario</button>`;
@@ -209,7 +212,7 @@
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `informe_${nombreCliente.replace(/\s+/g, '_')}.pdf`;
+            a.download = `informe_${nombreCliente.replace(/\\s+/g, '_')}.pdf`;
             document.body.appendChild(a);
             a.click();
             a.remove();
@@ -228,3 +231,11 @@
 
 </body>
 </html>
+"""
+
+# Ruta donde se ubica tu archivo index.html en el proyecto
+archivo_html = Path("index.html")
+
+# Sobrescribe el archivo de manera limpia
+archivo_html.write_text(html_contenido, encoding="utf-8")
+print("¡Archivo index.html actualizado y guardado exitosamente sin errores!")
