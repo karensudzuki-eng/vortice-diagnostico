@@ -2,7 +2,7 @@ import os
 import sqlite3
 import uuid
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -11,22 +11,15 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
-# 1. Inicialización principal de la aplicación
 app = FastAPI(title="Consultoría Base de Diagnóstico - Vórtice Integration", version="1.0")
 
-# 2. Configuración única de CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Permite peticiones desde cualquier origen (ideal para desarrollo local y producción)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# 3. Ruta raíz para servir tu interfaz web (index.html)
-@app.get("/", response_class=HTMLResponse)
-def servir_formulario():
-    return FileResponse("index.html")
 
 # --- CONFIGURACIÓN DE BASE DE DATOS SQLITE ---
 DB_NAME = "vortice_tokens.db"
@@ -47,7 +40,7 @@ def init_db():
 
 init_db()
 
-# Estructura de entrada que exige el Token de Acceso
+# Estructura de entrada actualizada que exige el Token de Acceso
 class EvaluacionRequest(BaseModel):
     token: str = Field(..., description="Token único de acceso proporcionado tras el pago")
     nombre_cliente: str = Field(..., description="Nombre de la clínica u organización evaluada")
@@ -173,6 +166,7 @@ def generar_pdf_diagnostico(data_resultado: dict, nombre_cliente: str, ruta_sali
     doc.build(story)
     return ruta_salida
 
+# Ruta auxiliar para generar tokens de prueba fácilmente
 @app.get("/api/crear-token")
 def crear_token(cliente: str):
     nuevo_token = str(uuid.uuid4())[:8].upper()
@@ -249,14 +243,13 @@ def calcular_y_generar_pdf(data: EvaluacionRequest):
 
     return FileResponse(ruta_pdf, media_type='application/pdf', filename=ruta_pdf)
 
-# --- HITO 2: WEBHOOK DE PASARELA DE PAGO ---
 class PagoExitosoRequest(BaseModel):
     transaccion_id: str = Field(..., description="ID de la transacción de la pasarela de pago")
     nombre_cliente: str = Field(..., description="Nombre del cliente o clínica que realizó el pago")
     email_cliente: str = Field(..., description="Correo electrónico del cliente")
 
 @app.post("/api/webhook/pago-exitoso")
-def registrar_pago_y_generar_token(data: PagoExitosoRequest):
+def registrar_pago_y_generar_token(data: PagoExitorRequest if False else PagoExitosoRequest):
     nuevo_token = str(uuid.uuid4())[:8].upper()
     
     conn = sqlite3.connect(DB_NAME)
