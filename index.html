@@ -37,7 +37,7 @@
             <b>El Objetivo:</b> Comprender que la integración real va mucho más allá de la tecnología. Un sistema eficiente requiere alinear los flujos de trabajo (eficiencia), el propósito humano (cohesión) y el manejo de datos (digitalización).
         </p>
         <p style="color: #333333; font-size: 13px; line-height: 1.5; margin: 0;">
-            <b>Metodología:</b> Al ingresar su token exclusivo, el evaluador califica 15 variables críticas en una escala de 1 a 5 para generar instantáneamente un <b>Informe Ejecutivo en PDF</b> estructurado por expertos.
+            <b>Metodología:</b> Al ingresar su token exclusivo, el evaluador califica 15 variables críticas en una escala de 1 al 5 para generar instantáneamente un <b>Informe Ejecutivo en PDF</b> estructurado por expertos.
         </p>
     </div>
 
@@ -76,7 +76,7 @@
 
         <div class="form-group">
             <label for="nombreCliente">Nombre de la Organización / Clínica:</label>
-            <input type="text" id="nombreCliente" required maxlength="80" pattern="[A-Za-z0-9áéíóúÁÉÍÓÚñÑ\\s\\.\\,\\-_]+" title="Solo se permiten letras, números y espacios estándar" placeholder="Ej. Clínica Las Condes">
+            <input type="text" id="nombreCliente" required maxlength="80" pattern="[A-Za-z0-9áéíóúÁÉÍÓÚñÑ\s\.\,\-_]+" title="Solo se permiten letras, números y espacios estándar" placeholder="Ej. Clínica Las Condes">
         </div>
 
         <h3>Dimensión 1: Eficiencia Operativa (Flujos y Procesos)</h3>
@@ -143,30 +143,31 @@
 
     // Lógica del simulador para pedir el token al backend de forma limpia
     document.getElementById('btnSimularToken').addEventListener('click', async function() {
-    const nombre = document.getElementById('simNombre').value.trim();
-    const email = document.getElementById('simEmail').value.trim();
-    const metodo = document.getElementById('simMetodo').value;
-    const resDiv = document.getElementById('resultadoTokenSimulado');
+        const nombre = document.getElementById('simNombre').value.trim();
+        const email = document.getElementById('simEmail').value.trim();
+        const metodo = document.getElementById('simMetodo').value;
+        const resDiv = document.getElementById('resultadoTokenSimulado');
 
-    if (!nombre || !email) {
-        alert("Por favor ingrese el nombre y correo para simular el pago.");
-        return;
-    }
+        if (!nombre || !email) {
+            alert("Por favor ingrese el nombre y correo para simular el pago.");
+            return;
+        }
 
-    try {
-        const response = await fetch(`/api/crear-token?cliente=${encodeURIComponent(nombre)}`);
-        if (!response.ok) throw new Error("No se pudo generar el token en el servidor.");
-        
-        const data = await response.json();
-        const tokenGenerado = (typeof data === 'object') ? (data.token_generado || data.token || data.codigo || data.access_token || JSON.stringify(data)) : data;
+        try {
+            const response = await fetch(`/api/crear-token?cliente=${encodeURIComponent(nombre)}`);
+            if (!response.ok) throw new Error("No se pudo generar el token en el servidor.");
+            
+            const data = await response.json();
+            const tokenGenerado = (typeof data === 'object') ? (data.token_generado || data.token || data.codigo || data.access_token || JSON.stringify(data)) : data;
 
-        resDiv.style.display = 'block';
-        resDiv.innerHTML = `<b>¡Simulación Exitosa!</b><br>Pago registrado vía ${metodo}.<br>Tu Token generado es: <strong style="font-size: 15px; color: #166534;">${tokenGenerado}</strong><br><button type="button" style="margin-top: 8px; padding: 6px 12px; font-size: 13px; width: auto;" onclick="document.getElementById('tokenAcceso').value='${tokenGenerado}'; document.getElementById('nombreCliente').value='${nombre}';">Usar este Token en el Formulario</button>`;
+            resDiv.style.display = 'block';
+            resDiv.innerHTML = `<b>¡Simulación Exitosa!</b><br>Pago registrado vía ${metodo}.<br>Tu Token generado es: <strong style="font-size: 15px; color: #166534;">${tokenGenerado}</strong><br><button type="button" style="margin-top: 8px; padding: 6px 12px; font-size: 13px; width: auto;" onclick="document.getElementById('tokenAcceso').value='${tokenGenerado}'; document.getElementById('nombreCliente').value='${nombre}';">Usar este Token en el Formulario</button>`;
 
-    } catch (err) {
-        alert("Error al conectar con el servidor para emitir el token de prueba.");
-    }
-});
+        } catch (err) {
+            alert("Error al conectar con el servidor para emitir el token de prueba.");
+        }
+    });
+
     // Envío del formulario de diagnóstico
     document.getElementById('diagnosticoForm').addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -207,7 +208,7 @@
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `informe_${nombreCliente.replace(/\\s+/g, '_')}.pdf`;
+            a.download = `informe_${nombreCliente.replace(/\s+/g, '_')}.pdf`;
             document.body.appendChild(a);
             a.click();
             a.remove();
