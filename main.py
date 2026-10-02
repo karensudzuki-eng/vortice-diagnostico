@@ -5,6 +5,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+
+@app.get("/", response_class=HTMLResponse)
+def servir_formulario():
+    return FileResponse("index.html")
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
