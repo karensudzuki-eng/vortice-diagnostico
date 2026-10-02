@@ -158,8 +158,8 @@
             const response = await fetch(`/api/crear-token?cliente=${encodeURIComponent(nombre)}`);
             if (!response.ok) throw new Error("No se pudo generar el token en el servidor.");
             
-            const data = await response.json();
-            const tokenGenerado = data.token; // Ajusta según la estructura JSON que devuelva tu API
+           const data = await response.json();
+           const tokenGenerado = data.token || data.codigo || data.access_token || data; // Ajusta según la estructura JSON que devuelva tu API
 
             resDiv.style.display = 'block';
             resDiv.innerHTML = `<b>¡Simulación Exitosa!</b><br>Pago registrado vía ${metodo}.<br>Tu Token generado es: <strong style="font-size: 15px; color: #166534;">${tokenGenerado}</strong><br><button type="button" style="margin-top: 8px; padding: 6px 12px; font-size: 13px; width: auto;" onclick="document.getElementById('tokenAcceso').value='${tokenGenerado}'; document.getElementById('nombreCliente').value='${nombre}';">Usar este Token en el Formulario</button>`;
