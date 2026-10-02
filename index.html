@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultoría Base de Diagnóstico | Vórtice Integration</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #F4F7F6; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 800px; background: #fff; margin: 0 auto; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h1 { color: #1A2B4C; font-size: 22px; border-bottom: 2px solid #008080; padding-bottom: 10px; }
+        h3 { color: #008080; margin-top: 25px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        input[type="text"], select { width: 100%; padding: 8px; border: 1px solid #CBD5E1; border-radius: 4px; font-size: 14px; }
+        button { background-color: #008080; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 20px; }
+        button:hover { background-color: #006666; }
+        .question-box { background: #F9FBFD; padding: 10px 15px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #E2E8F0; }
+        .token-box { background: #EBF4FF; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #BEE3F8; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Vórtice Integration Holding SpA</h1>
+    <p>Plataforma de Diagnóstico Sistémico y Madurez Operativa</p>
+    
+    <form id="diagnosticoForm">
+        <div class="token-box">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="tokenAcceso">Token de Acceso Único:</label>
+                <input type="text" id="tokenAcceso" required placeholder="Ingresa tu código de acceso (Ej. A3F8B2C1)">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="nombreCliente">Nombre de la Organización / Clínica:</label>
+            <input type="text" id="nombreCliente" required placeholder="Ej. Clínica Las Condes">
+        </div>
+
+        <h3>Dimensión 1: Eficiencia Operativa (Flujos y Procesos)</h3>
+        <div id="preguntasEficiencia"></div>
+
+        <h3>Dimensión 2: Cohesión Humana (Propósito y Alineación)</h3>
+        <div id="preguntasCohesion"></div>
+
+        <h3>Dimensión 3: Digitalización y Manejo de Datos</h3>
+        <div id="preguntasDigitalizacion"></div>
+
+        <button type="submit">Generar Informe Ejecutivo PDF</button>
+    </form>
+</div>
+
+<script>
+    const preguntas = {
+        eficiencia: [
+            "1. ¿Los tiempos de atención o respuesta superan los estándares óptimos?",
+            "2. ¿Existe reingreso manual de información o duplicidad de registros?",
+            "3. ¿Los flujos diarios dependen de la improvisación (heroísmo) en vez de protocolos?",
+            "4. ¿Los procesos de aprobación se estancan por capas burocráticas?",
+            "5. ¿Se cuenta con control formal para detectar errores antes de impactar al cliente?"
+        ],
+        cohesion: [
+            "1. ¿El equipo alinea su ejecución diaria con el propósito estratégico?",
+            "2. ¿Cómo se enfrenta la organización ante la implementación de mejoras o tecnología?",
+            "3. ¿Los niveles de carga laboral generan fatiga crónica o burnout generalizado?",
+            "4. ¿Existe fluidez colaborativa o predominan los 'silos' aislados?",
+            "5. ¿Los líderes actúan orientados a procesos o apagando incendios reactivos?"
+        ],
+        digitalizacion: [
+            "1. ¿La información crítica se centraliza en un repositorio único y veraz?",
+            "2. ¿Los diferentes sistemas de la organización se comunican de forma automatizada?",
+            "3. ¿Se garantiza la integridad y trazabilidad absoluta de los datos?",
+            "4. ¿La infraestructura digital cuenta con gobernanza y cumplimiento normativo?",
+            "5. ¿Los usuarios utilizan activamente las herramientas tecnológicas disponibles?"
+        ]
+    };
+
+    function cargarPreguntas(categoria, contenedorId) {
+        const contenedor = document.getElementById(contenedorId);
+        preguntas[categoria].forEach((pregunta, index) => {
+            contenedor.innerHTML += `
+                <div class="question-box">
+                    <label>${pregunta}</label>
+                    <select name="${categoria}_${index}" required>
+                        <option value="" disabled selected>Seleccione nivel (1 al 5)</option>
+                        <option value="1">1 - Crítico / Alta Fricción</option>
+                        <option value="2">2 - Reactivo / Básico</option>
+                        <option value="3">3 - Funcional / Templado</option>
+                        <option value="4">4 - Avanzado / Integrado</option>
+                        <option value="5">5 - Vórtice / Excelencia</option>
+                    </select>
+                </div>
+            `;
+        });
+    }
+
+    cargarPreguntas('eficiencia', 'preguntasEficiencia');
+    cargarPreguntas('cohesion', 'preguntasCohesion');
+    cargarPreguntas('digitalizacion', 'preguntasDigitalizacion');
+
+    document.getElementById('diagnosticoForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const recolectarValores = (cat) => {
+            return Array.from({length: 5}, (_, i) => parseInt(document.querySelector(`[name="${cat}_${i}"]`).value));
+        };
+
+        const payload = {
+            token: document.getElementById('tokenAcceso').value.trim(),
+            nombre_cliente: document.getElementById('nombreCliente').value,
+            eficiencia: recolectarValores('eficiencia'),
+            cohesion: recolectarValores('cohesion'),
+            digitalizacion: recolectarValores('digitalizacion')
+        };
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/generar-informe-pdf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.detail || 'Error al procesar la solicitud.');
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `informe_${payload.nombre_cliente.replace(/\s+/g, '_')}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        } catch (error) {
+            alert('Aviso de Seguridad: ' + error.message);
+            console.error(error);
+        }
+    });
+</script>
+
+</body>
+</html>
