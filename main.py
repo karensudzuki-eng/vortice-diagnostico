@@ -2,31 +2,19 @@ import os
 import sqlite3
 import uuid
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
-
-@app.get("/", response_class=HTMLResponse)
-def servir_formulario():
-    return FileResponse("index.html")
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
+# 1. Inicialización principal de la aplicación
 app = FastAPI(title="Consultoría Base de Diagnóstico - Vórtice Integration", version="1.0")
-# --- AGREGA ESTO AQUÍ ---
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Permite peticiones desde cualquier origen (ideal para desarrollo local)
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-# ------------------------
 
+# 2. Configuración única de CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -34,6 +22,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 3. Ruta raíz para servir tu interfaz web (index.html)
+@app.get("/", response_class=HTMLResponse)
+def servir_formulario():
+    return FileResponse("index.html")
 
 # --- CONFIGURACIÓN DE BASE DE DATOS SQLITE ---
 DB_NAME = "vortice_tokens.db"
@@ -54,7 +47,7 @@ def init_db():
 
 init_db()
 
-# Estructura de entrada actualizada que ahora exige el Token de Acceso
+# Estructura de entrada que exige el Token de Acceso
 class EvaluacionRequest(BaseModel):
     token: str = Field(..., description="Token único de acceso proporcionado tras el pago")
     nombre_cliente: str = Field(..., description="Nombre de la clínica u organización evaluada")
@@ -180,10 +173,9 @@ def generar_pdf_diagnostico(data_resultado: dict, nombre_cliente: str, ruta_sali
     doc.build(story)
     return ruta_salida
 
-# Ruta auxiliar para generar tokens de prueba fácilmente
 @app.get("/api/crear-token")
 def crear_token(cliente: str):
-    nuevo_token = str(uuid.uuid4())[:8].upper() # Genera un código alfanumérico de 8 caracteres
+    nuevo_token = str(uuid.uuid4())[:8].upper()
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("INSERT INTO tokens (token, usado, nombre_cliente) VALUES (?, 0, ?)", (nuevo_token, cliente))
@@ -193,7 +185,6 @@ def crear_token(cliente: str):
 
 @app.post("/api/generar-informe-pdf")
 def calcular_y_generar_pdf(data: EvaluacionRequest):
-    # 1. Validar Token en la Base de Datos
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("SELECT usado FROM tokens WHERE token = ?", (data.token,))
@@ -207,7 +198,6 @@ def calcular_y_generar_pdf(data: EvaluacionRequest):
         conn.close()
         raise HTTPException(status_code=403, detail="Acceso denegado: Este token ya fue utilizado para generar un informe previo.")
 
-    # 2. Validaciones dimensionales
     for dim_name, dim_values in [("Eficiencia", data.eficiencia), ("Cohesión", data.cohesion), ("Digitalización", data.digitalizacion)]:
         if len(dim_values) != 5 or any(v < 1 or v > 5 for v in dim_values):
             conn.close()
@@ -250,12 +240,10 @@ def calcular_y_generar_pdf(data: EvaluacionRequest):
         "alertas_zonas_frias": zonas_frias_count
     }
 
-    # 3. Marcar el Token como UTILIZADO en la base de datos (Garantiza el uso único)
     cursor.execute("UPDATE tokens SET usado = 1 WHERE token = ?", (data.token,))
     conn.commit()
     conn.close()
 
-    # 4. Generar el PDF
     ruta_pdf = f"informe_{data.nombre_cliente.replace(' ', '_')}.pdf"
     generar_pdf_diagnostico(resultado_dict, data.nombre_cliente, ruta_pdf)
 
@@ -269,11 +257,6 @@ class PagoExitosoRequest(BaseModel):
 
 @app.post("/api/webhook/pago-exitoso")
 def registrar_pago_y_generar_token(data: PagoExitosoRequest):
-    """
-    Endpoint que recibe la confirmación de la pasarela de pago,
-    genera un token único de un solo uso y lo registra en la base de datos.
-    """
-    # Generar token alfanumérico único de 8 caracteres
     nuevo_token = str(uuid.uuid4())[:8].upper()
     
     conn = sqlite3.connect(DB_NAME)
@@ -289,9 +272,6 @@ def registrar_pago_y_generar_token(data: PagoExitosoRequest):
         raise HTTPException(status_code=500, detail=f"Error al registrar el token: {str(e)}")
     finally:
         conn.close()
-
-    # Aquí puedes conectar en el futuro un servicio de correo (como Resend o SendGrid) 
-    # para enviar automáticamente 'nuevo_token' al 'email_cliente'.
     
     return {
         "status": "success",
