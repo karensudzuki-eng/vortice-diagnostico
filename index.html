@@ -1,8 +1,4 @@
 <!DOCTYPE html>
-from pathlib import Path
-
-# Contenido HTML final consolidado para la plataforma
-html_contenido = """<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -147,31 +143,30 @@ html_contenido = """<!DOCTYPE html>
 
     // Lógica del simulador para pedir el token al backend de forma limpia
     document.getElementById('btnSimularToken').addEventListener('click', async function() {
-        const nombre = document.getElementById('simNombre').value.trim();
-        const email = document.getElementById('simEmail').value.trim();
-        const metodo = document.getElementById('simMetodo').value;
-        const resDiv = document.getElementById('resultadoTokenSimulado');
+    const nombre = document.getElementById('simNombre').value.trim();
+    const email = document.getElementById('simEmail').value.trim();
+    const metodo = document.getElementById('simMetodo').value;
+    const resDiv = document.getElementById('resultadoTokenSimulado');
 
-        if (!nombre || !email) {
-            alert("Por favor ingrese el nombre y correo para simular el pago.");
-            return;
-        }
+    if (!nombre || !email) {
+        alert("Por favor ingrese el nombre y correo para simular el pago.");
+        return;
+    }
 
-        try {
-            const response = await fetch(`/api/crear-token?cliente=${encodeURIComponent(nombre)}`);
-            if (!response.ok) throw new Error("No se pudo generar el token en el servidor.");
-            
-            const data = await response.json();
-            const tokenGenerado = (typeof data === 'object') ? (data.token || data.codigo || data.access_token || JSON.stringify(data)) : data;
+    try {
+        const response = await fetch(`/api/crear-token?cliente=${encodeURIComponent(nombre)}`);
+        if (!response.ok) throw new Error("No se pudo generar el token en el servidor.");
+        
+        const data = await response.json();
+        const tokenGenerado = (typeof data === 'object') ? (data.token_generado || data.token || data.codigo || data.access_token || JSON.stringify(data)) : data;
 
-            resDiv.style.display = 'block';
-            resDiv.innerHTML = `<b>¡Simulación Exitosa!</b><br>Pago registrado vía ${metodo}.<br>Tu Token generado es: <strong style="font-size: 15px; color: #166534;">${tokenGenerado}</strong><br><button type="button" style="margin-top: 8px; padding: 6px 12px; font-size: 13px; width: auto;" onclick="document.getElementById('tokenAcceso').value='${tokenGenerado}'; document.getElementById('nombreCliente').value='${nombre}';">Usar este Token en el Formulario</button>`;
+        resDiv.style.display = 'block';
+        resDiv.innerHTML = `<b>¡Simulación Exitosa!</b><br>Pago registrado vía ${metodo}.<br>Tu Token generado es: <strong style="font-size: 15px; color: #166534;">${tokenGenerado}</strong><br><button type="button" style="margin-top: 8px; padding: 6px 12px; font-size: 13px; width: auto;" onclick="document.getElementById('tokenAcceso').value='${tokenGenerado}'; document.getElementById('nombreCliente').value='${nombre}';">Usar este Token en el Formulario</button>`;
 
-        } catch (err) {
-            alert("Error al conectar con el servidor para emitir el token de prueba.");
-        }
-    });
-
+    } catch (err) {
+        alert("Error al conectar con el servidor para emitir el token de prueba.");
+    }
+});
     // Envío del formulario de diagnóstico
     document.getElementById('diagnosticoForm').addEventListener('submit', async function(e) {
         e.preventDefault();
