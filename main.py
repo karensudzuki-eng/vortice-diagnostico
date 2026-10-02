@@ -21,6 +21,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+def servir_frontend():
+    return FileResponse("index.html")
+    
 # --- CONFIGURACIÓN DE BASE DE DATOS SQLITE ---
 DB_NAME = "vortice_tokens.db"
 
